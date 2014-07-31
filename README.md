@@ -3,7 +3,7 @@ It has a simple GUI and console. The GUI uses GTK+ so you might have to download
 
 Compiles with Python 3.4
 
-Create a new index.html and save it in /var/www/
+You must create a new index.html and save it in /var/www/
 
 To run type: sudo python3.4 Linx_WebServer.py
 
