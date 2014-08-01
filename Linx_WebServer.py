@@ -25,12 +25,14 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import ipaddress
 import _thread as thread
 import Defaults
+import traceback
 
-
-""" Default values """
+""" Default Server values """
 
 __ABOUT__= Defaults.Defaults.__ABOUT__
-
+__DEFAULT_PAGE__ = Defaults.Defaults.__DEFAULT_HTML__
+__DEFAULT_IP__ = Defaults.Defaults.__DEFAULT_IP__
+__TITLE__ = Defaults.Defaults. __TITLE__
 
 class indexPageWriter():
 
@@ -42,8 +44,6 @@ class indexPageWriter():
 class myHandler(BaseHTTPRequestHandler):
     """ Later these configuration options will have to be set in a seperate config file """
     file_extension_html = '.html'
-    file_extension_php = '.php'
-    server_on = False
     default_www_path = "/var/www/"
     """ --------------------------------------------------------------------------------"""
     
@@ -58,16 +58,18 @@ class myHandler(BaseHTTPRequestHandler):
         self.end_headers()
         try:
             if (self.path == "/"):
-                file = open("/var/www/index.html", 'r')
+                file = None
+                if(file == None):
+                    file = open(self.default_www_path+"index.html", 'x')
+                    file.write(__DEFAULT_HTML__)
+                    file.close()
+                    
                 raw_data = file.read()
-                #convert binary data to utf-8 for display in browser
                 encoded_data = bytes(raw_data, 'utf-8')
                 file.close()
-                #print content sto web browser
                 self.wfile.write(encoded_data)
         except:
-                #self.get_request()
-                error_message = bytes("Could not find default "+file_extension_html+" in current path", 'utf-8')
+                error_message = bytes(__DEFAULT_PAGE__, 'utf-8')
                 self.wfile.write(error_message)
         return
     # args
@@ -75,19 +77,20 @@ class myHandler(BaseHTTPRequestHandler):
         """Start the Linx HTTP Server"""
    
         try:
-            ip_address = str(ipaddress.IPv4Address(ipObject))#convert IPv4 object to str
-            server = HTTPServer((ip_address, c_port), myHandler)
+            ip_address = str(ipaddress.IPv4Address(ipObject))
+            server = HTTPServer((ip_address, c_port),myHandler)
             try:
-                print("Started Linx server succesfully...")
-                server.serve_forever()
+                
+                server.serve_forever(0)
                 
             except Exception as e:
+                traceback.print_exc()
                 win = Gtk.Window()
                 LinxWindow.exceptionDialog(win, e)
         except Exception as e:
             
-            win = Gtk.Window()#window object to pass to method to properly display Dialog
-            LinxWindow.exceptionDialog(win, e)#call method to handle Dialog messages created with no Gtk.Window instance  
+            win = Gtk.Window()
+            LinxWindow.exceptionDialog(win, e)
             
                 
 class LinxWindow(Gtk.Window):
@@ -95,7 +98,7 @@ class LinxWindow(Gtk.Window):
     current_default_server_url = None
     
     def __init__(self):
-        win = Gtk.Window.__init__(self, title="Linx Web Server v"+self.VERSION+" ",
+        win = Gtk.Window.__init__(self, title=__TITLE__+" v"+self.VERSION+" ",
                            resizable=True, default_height=400, default_width=450)
         #--Begin-Widget--Initialization
         box = Gtk.Box(spacing=10, margin_left=10, margin_top=10, margin_right=10)
@@ -104,7 +107,7 @@ class LinxWindow(Gtk.Window):
         box.pack_start(grid, True, True, 0)
         ip_label_description = Gtk.Label("Enter I.P address")
         self.ip_Entry = Gtk.Entry()
-        self.ip_Entry.set_text("127.0.0.7")
+        self.ip_Entry.set_text(__DEFAULT_IP__)
         start_server_button = Gtk.Button(label="Start Server", margin_left=10)
         start_server_button.connect("clicked", self.on_start_server_clicked)
         close_button = Gtk.Button(label="close", margin_left=10, margin_right=10)
@@ -113,9 +116,10 @@ class LinxWindow(Gtk.Window):
         adjustment = Gtk.Adjustment(0, 0, 54000, 1, 10, 1)
         self.port = Gtk.SpinButton()
         self.port.set_adjustment(adjustment)
-        self.linkbutton = Gtk.LinkButton("http://", "see test page")
+        self.linkbutton = Gtk.LinkButton("http://", "See test page")
+
         
-        #Change TextView Color properties
+
         bg = Gdk.Color(0, 2000, 1000)
         text_color = Gdk.Color(0, 42000, 0)
         textbuf = Gtk.TextBuffer(text=__ABOUT__) 
@@ -123,7 +127,6 @@ class LinxWindow(Gtk.Window):
         self.console.set_size_request(400, 400)
         self.console.modify_bg(Gtk.StateType.NORMAL, bg)
         self.console.modify_fg(Gtk.StateType.NORMAL, text_color)
-        #Change TextView Color properties
         self.console.set_border_window_size(Gtk.TextWindowType.BOTTOM, 10)
         
         
@@ -139,6 +142,7 @@ class LinxWindow(Gtk.Window):
         grid.add(self.linkbutton)
         #--End-Widget--Initialization
 
+        
     def writeToConsole (self, text):		
         """
           This function will be used to append text into the consoles textBuffer
@@ -163,16 +167,16 @@ class LinxWindow(Gtk.Window):
         if (ip != ''):
             try:
                 try:
-                    ip_x = ipaddress.ip_address(ip)
+                    ipObject = ipaddress.ip_address(ip)
                     xport = int(port)
                     if (type(xport) == int):
                 
                         self.linkbutton.set_uri("http://"+ip+":"+str(xport))
-                        ip_x = ipaddress.ip_address(ip)
+                        
                         try:
-                            myHandler.start_server(ip_x, xport)
+    
+                                 myHandler.start_server(ipObject, xport)
                         except Exception as e:
-                            print(" %s " %e)
                             Dialog = Gtk.MessageDialog(self,Gtk.DialogFlags.MODAL,
                                                    Gtk.MessageType.ERROR,
                                                    Gtk.ButtonsType.OK, "Error creating server: %s" %e)
@@ -181,13 +185,14 @@ class LinxWindow(Gtk.Window):
                     
                     else:
                         Dialog = Gtk.MessageDialog(self, Gtk.DialogFlags.MODAL,
-                                               Gtk.MessageType.INFO, Gtk.ButtonsType.OK, "Please enter a valid PORT number. eg 80, 8080")
+                                               Gtk.MessageType.INFO, Gtk.ButtonsType.OK, Defaults.Defaults.__ERROR__MSG_GENERAL)
                     
                         Gtk.Dialog.run(Dialog)
                         Gtk.Widget.destroy(Dialog)
                 except:
                     Dialog = Gtk.MessageDialog(self, Gtk.DialogFlags.MODAL, Gtk.MessageType.INFO, Gtk.ButtonsType.OK,
-                                               "Please pleaser a valid IP address or Port number")
+                                               Defaults.Defaults.__ERROR_MSG_PORT_OR_IP)
+                                               
                     Dialog.run()
                     Gtk.Widget.destroy(Dialog)
                 
@@ -196,7 +201,7 @@ class LinxWindow(Gtk.Window):
                 
             except:
                 Dialog = Gtk.MessageDialog(self, Gtk.DialogFlags.MODAL
-                                  ,Gtk.MessageType.INFO, Gtk.ButtonsType.OK,"Please enter a valid I.P address eg.192.168.1.1")
+                                  ,Gtk.MessageType.INFO, Gtk.ButtonsType.OK, Defaults.Defaults.__ERROR__MSG_INVALID_IP)
                 
                 Gtk.Dialog.run(Dialog)
                 Gtk.Widget.destroy(Dialog)
@@ -204,7 +209,7 @@ class LinxWindow(Gtk.Window):
                 
         else:
             Dialog = Gtk.MessageDialog(self, Gtk.DialogFlags.MODAL
-                                  ,Gtk.MessageType.INFO, Gtk.ButtonsType.OK,"Please enter a valid I.P address eg.192.168.1.2")
+                                  ,Gtk.MessageType.INFO, Gtk.ButtonsType.OK,Defaults.Defaults.__ERROR__MSG_INVALID_IP)
             Gtk.Dialog.run(Dialog)
             Gtk.Widget.destroy(Dialog)
             

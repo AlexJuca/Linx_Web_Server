@@ -111,8 +111,8 @@ class BaseServer:
                 # connecting to the socket to wake this up instead of
                 # polling. Polling reduces our responsiveness to a
                 # shutdown request and wastes cpu at all other times.
-                r, w, e = thread.start_new_thread(_eintr_retry(select.select, [self], [], [],
-                                       poll_interval))
+                r, w, e = _eintr_retry(select.select, [self], [], [],
+                                       poll_interval)
                 if self in r:
                     self._handle_request_noblock()
 
