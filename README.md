@@ -9,3 +9,5 @@ Make sure you start it on an available port and I.P (Loopback will work, obvious
 Make sure you have GTK installed before you run the script. You can download GTK here http://www.pygtk.org/.
 
 Still work in progress though.
+
+To run script: sudo python3.4 Linx_WebServer.py.
