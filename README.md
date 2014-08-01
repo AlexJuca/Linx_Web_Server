@@ -11,3 +11,5 @@ Make sure you have GTK installed before you run the script. You can download GTK
 Still work in progress though.
 
 To run script: sudo python3.4 Linx_WebServer.py.
+
+NOTE: GUI will lock while lock while doing ayncronous work using select[, , , ] until I find a work around. That does not mean the app hanged. The server thread will still be running until you send an interupt.
