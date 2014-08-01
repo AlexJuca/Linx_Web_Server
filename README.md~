@@ -7,6 +7,6 @@ You must copy index.html and save it in /var/www/
 
 To run type: sudo python3.4 Linx_WebServer.py
 
-INFO: You can bind the server on any internal I.P Address or loopback default is 127.0.0.7 . It will not bind to an external Internet connected I.P Address!
+INFO: You can bind the server on any internal I.P Address or loopback default is 127.0.0.7 . 
 
 Oh and BTW, Have fun!
